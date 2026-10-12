@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --disable-pip-version-check -r backend/requirements.txt
+
+      - name: Run pytest test suite
+        env:
+          APP_ENV: development
+          DEMO_MODE: "true"
+          DATABASE_PATH: ":memory:"
+          JWT_SECRET: dev-secret-ci-testing-key-32b
+        run: |
+          PYTHONPATH=. .venv/bin/pytest backend/tests -v
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Typecheck and build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run Vitest frontend tests
+        working-directory: frontend
+        run: npm test
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker image
+        run: |
+          docker build -f backend/Dockerfile -t api-fuzzer-backend:ci .
+
+      - name: Build Frontend Docker image
+        run: |
+          docker build -f frontend/Dockerfile -t api-fuzzer-frontend:ci ./frontend

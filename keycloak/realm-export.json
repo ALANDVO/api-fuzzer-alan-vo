@@ -1,0 +1,65 @@
+{
+  "id": "api-fuzzer",
+  "realm": "api-fuzzer",
+  "displayName": "API Fuzzer Security Realm",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "viewer",
+        "description": "Read-only access to specs, fuzz jobs, and findings"
+      },
+      {
+        "name": "operator",
+        "description": "Upload specs, launch fuzz jobs, and export reports"
+      },
+      {
+        "name": "admin",
+        "description": "Administrative management and audit log inspection"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "api-fuzzer-app",
+      "name": "API Fuzzer Client Application",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:3000/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:3000",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://127.0.0.1:3000"
+      }
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "saml-enterprise-idp",
+      "displayName": "Enterprise SAML 2.0 IdP (Brokered)",
+      "providerId": "saml",
+      "enabled": false,
+      "config": {
+        "singleSignOnServiceUrl": "https://idp.example.com/saml2/sso",
+        "nameIDPolicyFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+        "signatureAlgorithm": "RSA_SHA256"
+      }
+    }
+  ]
+}
