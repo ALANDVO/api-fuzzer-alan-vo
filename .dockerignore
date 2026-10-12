@@ -1,0 +1,13 @@
+.git
+.venv
+node_modules
+dist
+build
+__pycache__
+*.pyc
+.pytest_cache
+*.db
+*.sqlite
+.env
+.antigravitycli
+.omp

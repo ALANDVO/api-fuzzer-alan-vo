@@ -1,0 +1,43 @@
+# Product development plan
+
+Each round completes one feature or repair. Future items are planned, not implemented claims.
+
+## Current round
+
+fuzzer-core-engine
+
+## Roadmap
+
+### fuzzer-core-engine — Adversarial OpenAPI Fuzzing Engine, Heuristic Severity Scoring, and Baseline Evaluation
+
+Status: done
+
+Acceptance:
+- Parse OpenAPI 3.x specifications in JSON and YAML formats
+- Deterministically generate adversarial test cases across 6 security attack dimensions
+- Execute test cases with latency profiling and diff expected vs actual response shapes
+- Classify vulnerabilities with reproducible curl reproduction commands
+- Provide OIDC authentication and local demo mode with role-based access control
+- Provide React TypeScript dashboard for managing specs, running fuzz jobs, and exporting SARIF/Markdown/JSON reports
+- Provide reproducible AI/ML evaluation benchmark measuring classification accuracy against ground-truth dataset
+
+Implementation: `backend/app/main.py`, `backend/app/core/config.py`, `backend/app/core/auth.py`, `backend/app/core/database.py`, `backend/app/services/spec_parser.py`, `backend/app/services/mutation_engine.py`, `backend/app/services/fuzz_runner.py`, `backend/app/services/severity_classifier.py`, `backend/app/services/evaluation.py`, `backend/app/services/export_service.py`, `frontend/src/App.tsx`, `frontend/src/components/Dashboard.tsx`, `frontend/src/components/SpecManager.tsx`, `frontend/src/components/FuzzJobRunner.tsx`, `frontend/src/components/FindingsViewer.tsx`, `frontend/src/components/EvaluationView.tsx`
+
+Tests: `backend/tests/test_auth.py`, `backend/tests/test_spec_parser.py`, `backend/tests/test_mutation_engine.py`, `backend/tests/test_severity_classifier.py`, `backend/tests/test_llm_service.py`, `backend/tests/test_api_integration.py`, `backend/tests/test_evaluation.py`, `frontend/src/test/App.test.tsx`, `frontend/src/test/Dashboard.test.tsx`, `frontend/src/test/FuzzJobRunner.test.tsx`
+
+### distributed-fuzzing-workers — Distributed Asynchronous Fuzz Worker Queue
+
+Status: planned
+
+Acceptance:
+- Support distributed parallel execution of 1000+ fuzz cases across Celery/Redis worker nodes
+- Real-time Server-Sent Events (SSE) progress streaming to dashboard
+
+### automated-pr-remediation — Automated Pull Request Security Patch Generation
+
+Status: planned
+
+Acceptance:
+- Generate git patch with validation schema fixes for surfaced 500 error edge cases
+- Post finding annotations to GitHub Checks API
+

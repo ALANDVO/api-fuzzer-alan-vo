@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "api-fuzzer-alan-vo",
+  "owner": "ALANDVO",
+  "email": "alanvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: api-fuzzer-alan-vo",
+  "workflows": [
+    "OpenAPI specification parsing and adversarial attack vector generation across 6 security dimensions",
+    "Live API test execution with latency, status, and payload response capture",
+    "Severity scoring and vulnerability reporting with curl reproduction steps and SARIF export"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "status": "work-in-progress"
+}
