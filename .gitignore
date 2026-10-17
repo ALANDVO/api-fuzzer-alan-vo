@@ -29,7 +29,7 @@ build/
 *.db
 *.sqlite
 *.sqlite3
-data/
+/data/
 
 # Local Agent & Tooling Metadata
 .antigravitycli/

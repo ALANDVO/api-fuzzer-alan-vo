@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.0.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
@@ -46,5 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - SARIF 2.1.0 output for GitHub Code Scanning integration.
 - **AI/ML Evaluation Benchmark:**
   - Curated 24-case ground-truth dataset across 6 dimensions measuring accuracy, critical precision, recall, and F1-score.
+
+### Fixed
+- Restored the missing ground-truth benchmark dataset `backend/app/data/benchmark_dataset.json` (24 labeled cases across 6 attack dimensions), restoring the AI/ML evaluation benchmark endpoint and reactivating `test_benchmark_dataset_integrity` and `test_run_evaluation_benchmark_metrics`.
+- Restored the missing frontend sample OpenAPI target `frontend/src/data/sample_spec.json` consumed by `SpecManager` (PetStore-style schema), fixing TypeScript typecheck and the `FuzzJobRunner`/`SpecManager` tests.
+- Anchored the `.gitignore` `data/` pattern to the repository root (`/data/`) so product data directories are no longer ignored alongside local SQLite databases.
 
 Maintainer: Alan Vo <alanvo@gmail.com>

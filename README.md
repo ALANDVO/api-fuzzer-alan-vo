@@ -61,24 +61,26 @@ The benchmark dataset consists of 24 labeled real-world API test cases covering 
 
 | Metric | Naive Status Baseline | Heuristic Fuzzer Classifier |
 |---|---|---|
-| **Overall Accuracy** | 62.5% (15 / 24) | **83.33% (20 / 24)** |
-| **Critical Precision** | 70.0% | **100.0% (0 False Positives)** |
-| **Critical Recall** | 87.5% | **87.5%** |
-| **Critical F1-Score** | 77.8% | **93.33%** |
-| **Execution Latency** | 0.05 ms | **0.10 ms** |
+| **Overall Accuracy** | 54.17% (13 / 24) | **87.5% (21 / 24)** |
+| **Critical Precision** | 80.0% (4 / 5) | **88.89% (8 / 9)** |
+| **Critical Recall** | 50.0% (4 / 8) | **100.0% (8 / 8)** |
+| **Critical F1-Score** | 61.54% | **94.12%** |
+| **Execution Latency** | 0.15 ms | 0.15 ms |
+
+Latency is reported as the total runtime of a single benchmark pass executing all 24 cases through both classifiers.
 
 ### Dimension Accuracy Breakdown
 
 - **Injection Payloads:** 100.0% (4 / 4)
 - **Auth & Access Bypass:** 100.0% (4 / 4)
+- **Boundary Values:** 100.0% (4 / 4)
 - **Type Coercion:** 100.0% (4 / 4)
-- **Boundary Values:** 75.0% (3 / 4)
-- **Idempotency & Race:** 75.0% (3 / 4)
-- **Unicode & Locale:** 50.0% (2 / 4)
+- **Idempotency & Race:** 50.0% (2 / 4)
+- **Unicode & Locale:** 75.0% (3 / 4)
 
 ### Failure Cases & Limitations
 
-Heuristic pattern matching can miss vulnerabilities when upstream applications catch database driver exceptions internally and return an HTTP 200 response with non-standard JSON error wrappers (e.g. `{"ret": -1, "msg": "failed"}`). For these edge cases, opt-in LLM advisory evaluation is available to parse semantic response text.
+The benchmark surfaces three real classifier limitations. First, the heuristic flags **every** HTTP 500 as `critical`; a 500 caused by a benign duplicate/idempotency-key request (a robustness defect, not an exploitable security finding) is a false positive. Second, any response status outside the expected contract is flagged `moderate`; a legitimate `412 Precondition Failed` returned by a correct idempotency check is likewise a false positive. Third, the pattern matcher is blind to **unicode logic bypasses** — a right-to-left override payload that elevates a privilege returns HTTP 200 with a clean body, which the status-based heuristic scores as `pass` (false negative) even though the ground-truth severity is `moderate`. For all three false-positive/false-negative classes, opt-in LLM advisory evaluation is available to parse semantic response text and response shape beyond status codes.
 
 ---
 
