@@ -25,10 +25,12 @@
         "backend/app/services/fuzz_runner.py",
         "backend/app/services/severity_classifier.py",
         "backend/app/services/evaluation.py",
+        "backend/app/data/benchmark_dataset.json",
         "backend/app/services/export_service.py",
         "frontend/src/App.tsx",
         "frontend/src/components/Dashboard.tsx",
         "frontend/src/components/SpecManager.tsx",
+        "frontend/src/data/sample_spec.json",
         "frontend/src/components/FuzzJobRunner.tsx",
         "frontend/src/components/FindingsViewer.tsx",
         "frontend/src/components/EvaluationView.tsx"
