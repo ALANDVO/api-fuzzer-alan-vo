@@ -1,8 +1,15 @@
 # Changelog
 
+## 1.3.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.2.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Fixed
+- **Mutation engine dimension coverage**: The adversarial test case generator now guarantees at least one test case per requested attack dimension (up to `cases_per_endpoint` limit), using a round-robin selection strategy instead of relying on call order. This ensures all 6 security dimensions are represented when `cases_per_endpoint >= 6`.
 
 ## 1.1.0 — work-in-progress checkpoint
 

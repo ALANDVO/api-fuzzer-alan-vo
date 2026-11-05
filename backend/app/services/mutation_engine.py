@@ -27,9 +27,10 @@ class MutationEngine:
         dimensions: Optional[List[str]] = None,
         cases_per_endpoint: int = 6
     ) -> List[TestCaseModel]:
-        dims = set(dimensions or ["boundary_values", "type_coercion", "injection_payloads", "auth_bypass", "idempotency_race", "unicode_locale"])
+        dims = list(dimensions or ["boundary_values", "type_coercion", "injection_payloads", "auth_bypass", "idempotency_race", "unicode_locale"])
         cases: List[TestCaseModel] = []
         path, method = endpoint.path, endpoint.method
+        dims_used = set()
 
         def add(name: str, path_val: Any, body_val: Any, status: int, behavior: str, dim: str, hdrs: Optional[Dict[str, str]] = None):
             if dim in dims and len(cases) < cases_per_endpoint:
@@ -46,31 +47,59 @@ class MutationEngine:
                     expected_behavior=behavior,
                     dimension=dim
                 ))
+                dims_used.add(dim)
+
+        # Generate all candidate cases first, grouped by dimension
+        candidates_by_dim: Dict[str, List[Dict[str, Any]]] = {}
+
+        def queue(dim: str, name: str, path_val: Any, body_val: Any, status: int, behavior: str, hdrs: Optional[Dict[str, str]] = None):
+            if dim not in candidates_by_dim:
+                candidates_by_dim[dim] = []
+            candidates_by_dim[dim].append({
+                "name": name,
+                "path_val": path_val,
+                "body_val": body_val,
+                "status": status,
+                "behavior": behavior,
+                "hdrs": hdrs
+            })
 
         # 1. Boundary Values
-        add("Boundary empty string", "", "", 400, "Reject empty string with 4xx or process gracefully", "boundary_values")
-        add("Boundary oversized 5k string", "A" * 50, "A" * 5000, 400, "Reject oversized payload with 400/413, no 500 crash", "boundary_values")
+        queue("boundary_values", "Boundary empty string", "", "", 400, "Reject empty string with 4xx or process gracefully")
+        queue("boundary_values", "Boundary oversized 5k string", "A" * 50, "A" * 5000, 400, "Reject oversized payload with 400/413, no 500 crash")
 
         # 2. Type Coercion
-        add("Type coercion string to integer", "not_a_number", "not-a-number", 422, "FastAPI / Pydantic rejects with 422 Unprocessable Entity", "type_coercion")
-        add("Type coercion null body", "1", None, 400, "Reject null or missing request body cleanly", "type_coercion")
+        queue("type_coercion", "Type coercion string to integer", "not_a_number", "not-a-number", 422, "FastAPI / Pydantic rejects with 422 Unprocessable Entity")
+        queue("type_coercion", "Type coercion null body", "1", None, 400, "Reject null or missing request body cleanly")
 
         # 3. Injection Payloads
         for inj_name, payload, dim in INJECTION_PAYLOADS[:3]:
-            add(inj_name, payload, payload, 400, "Sanitize or reject injection payload; never leak SQL trace or 500", dim)
+            queue(dim, inj_name, payload, payload, 400, "Sanitize or reject injection payload; never leak SQL trace or 500")
 
         # 4. Auth Bypass
-        add("Auth bypass missing authorization", "1", "test", 401, "Require authenticated identity or validate public route safely", "auth_bypass")
-        add("Auth bypass forged invalid token", "1", "test", 401, "Reject invalid bearer token with 401 Unauthorized", "auth_bypass", {"Authorization": "Bearer malformed.jwt.signature"})
+        queue("auth_bypass", "Auth bypass missing authorization", "1", "test", 401, "Require authenticated identity or validate public route safely")
+        queue("auth_bypass", "Auth bypass forged invalid token", "1", "test", 401, "Reject invalid bearer token with 401 Unauthorized", {"Authorization": "Bearer malformed.jwt.signature"})
 
         # 5. Idempotency & Race
-        add("Duplicate mutation idempotency", "1", "idempotent_sample", 200, "Support idempotent execution without corruption", "idempotency_race", {"X-Idempotency-Key": "dup-test-uuid-001"})
+        queue("idempotency_race", "Duplicate mutation idempotency", "1", "idempotent_sample", 200, "Support idempotent execution without corruption", {"X-Idempotency-Key": "dup-test-uuid-001"})
 
         # 6. Unicode & Locale
         for uni_name, payload, dim in UNICODE_PAYLOADS[:2]:
-            add(uni_name, payload, payload, 400, "Process UTF-8 or reject safely without encoding exception", dim)
+            queue(dim, uni_name, payload, payload, 400, "Process UTF-8 or reject safely without encoding exception")
 
-        return cases[:cases_per_endpoint]
+        # Now pick cases: first one per requested dimension (round-robin), then fill remaining slots
+        for dim in dims:
+            if dim in candidates_by_dim and len(cases) < cases_per_endpoint:
+                c = candidates_by_dim[dim].pop(0)
+                add(c["name"], c["path_val"], c["body_val"], c["status"], c["behavior"], dim, c["hdrs"])
+
+        # Fill remaining slots with remaining candidates in dimension order
+        for dim in dims:
+            while dim in candidates_by_dim and candidates_by_dim[dim] and len(cases) < cases_per_endpoint:
+                c = candidates_by_dim[dim].pop(0)
+                add(c["name"], c["path_val"], c["body_val"], c["status"], c["behavior"], dim, c["hdrs"])
+
+        return cases
 
     def _substitute_path_params(self, path: str, params: List[Dict[str, Any]], fill_value: Any) -> str:
         res = path
