@@ -68,3 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Anchored the `.gitignore` `data/` pattern to the repository root (`/data/`) so product data directories are no longer ignored alongside local SQLite databases.
 
 Maintainer: Alan Vo <alanvo@gmail.com>
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

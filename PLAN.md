@@ -41,3 +41,6 @@ Acceptance:
 - Generate git patch with validation schema fixes for surfaced 500 error edge cases
 - Post finding annotations to GitHub Checks API
 
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

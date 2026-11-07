@@ -211,3 +211,7 @@ MIT License &bull; Copyright (c) 2026 Alan Vo &lt;alanvo@gmail.com&gt;
 ---
 
 **Alan Vo** &bull; [alanvo@gmail.com](mailto:alanvo@gmail.com) &bull; GitHub: [ALANDVO](https://github.com/ALANDVO)
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)
