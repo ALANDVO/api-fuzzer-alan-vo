@@ -10,6 +10,8 @@ SQL_ERRORS = [
 TRAVERSAL_INDICATORS = ["root:x:0:0:", "[boot loader]", "/bin/sh", "/bin/bash"]
 STACK_TRACE_INDICATORS = ["traceback (most recent call last)", "exception in thread", "fatal error:"]
 
+PRIVILEGE_ESCALATION_INDICATORS = ["admin", "root", "superuser", "administrator", "elevated"]
+
 
 class SeverityClassifier:
     """Evaluates actual API response vs expected behavior and assigns severity and evidence."""
@@ -50,6 +52,9 @@ class SeverityClassifier:
 
         # 1c. Unhandled 500 Server Error
         if actual_status >= 500:
+            # For idempotency_race, 500 is a robustness issue (moderate), not security (critical)
+            if dimension == "idempotency_race":
+                return "moderate", f"Idempotency race triggered server error {actual_status} - robustness concern.", repro_curl
             if any(st in resp_lower for st in STACK_TRACE_INDICATORS):
                 return "critical", f"Unhandled server 500 exception with active stack trace leaked.", repro_curl
             return "critical", f"Internal Server Error {actual_status} triggered on input payload.", repro_curl
@@ -59,9 +64,18 @@ class SeverityClassifier:
             return "critical", f"Security violation: Unauthenticated or malformed token was granted {actual_status} access.", repro_curl
 
         # 2. Moderate checks
-        # Status code deviation: expected validation error (4xx) but received 200 success on malformed/injection data
+        # 2a. Unicode/locale privilege escalation (RTL override, etc.)
+        if dimension == "unicode_locale" and actual_status in (200, 201, 204):
+            if any(ind in resp_lower for ind in PRIVILEGE_ESCALATION_INDICATORS):
+                return "moderate", "Unicode locale bypass resulted in privilege escalation or role elevation.", repro_curl
+
+        # 2b. Status code deviation: expected validation error (4xx) but received 200 success on malformed/injection data
         if dimension in ("injection_payloads", "type_coercion", "boundary_values") and actual_status == 200 and expected_status in (400, 422):
             return "moderate", f"Input validation failure: Malformed/injection input was accepted as valid (status 200).", repro_curl
+
+        # 2c. Idempotency: 412 Precondition Failed is valid handling, not a finding
+        if dimension == "idempotency_race" and actual_status == 412:
+            return "pass", "Idempotency precondition correctly enforced (412 Precondition Failed).", repro_curl
 
         if actual_status != expected_status and actual_status not in (200, 201, 204, 400, 401, 403, 404, 422):
             return "moderate", f"Unexpected HTTP status code {actual_status} received (expected {expected_status}).", repro_curl
