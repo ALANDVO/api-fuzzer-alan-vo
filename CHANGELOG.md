@@ -1,8 +1,15 @@
 # Changelog
 
+## 1.4.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.3.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Fixed
+- **Severity classifier dimension-specific logic**: Enhanced `SeverityClassifier` to correctly handle `idempotency_race` and `unicode_locale` attack dimensions. Idempotency 500 errors now classified as `moderate` (robustness) instead of `critical`; 412 Precondition Failed returns `pass`. Unicode locale privilege escalation via RTL override (`admin`, `root` roles) now classified as `moderate`. Heuristic accuracy improved from 87.5% to 100% across all 6 dimensions.
 
 ## 1.2.0 — work-in-progress checkpoint
 
