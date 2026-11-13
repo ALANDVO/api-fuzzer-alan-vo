@@ -37,6 +37,8 @@ class Settings(BaseModel):
                 raise ValueError("Security violation: Demo mode is strictly forbidden in production environment.")
             if not self.oidc_issuer_url and self.jwt_secret.startswith("dev-secret"):
                 raise ValueError("Security violation: Production deployment requires external OIDC or configured non-default JWT secret.")
+            if len(self.jwt_secret) < 32:
+                raise ValueError("Security violation: Production JWT secret must be at least 32 characters long and not the default dev secret.")
 
 
 _settings: Optional[Settings] = None
