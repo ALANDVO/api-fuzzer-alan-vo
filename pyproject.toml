@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "api-fuzzer-alan-vo"
-version = "1.0.0"
+version = "1.6.0"
 description = "AI-powered adversarial API fuzzer analyzing OpenAPI specifications with deterministic heuristics and LLM evaluation."
 readme = "README.md"
 requires-python = ">=3.12"

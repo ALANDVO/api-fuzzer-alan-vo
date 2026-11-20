@@ -50,7 +50,16 @@ async def create_fuzz_job(req: FuzzJobCreateRequest, user: TokenUser = Depends(r
 
     db.record_audit(user.user_id, "job.create", f"job:{job_id}", {"target": req.target_base_url, "cases_count": len(cases)})
     runner = FuzzRunner(target_base_url=req.target_base_url, enable_llm=req.enable_llm_advisory)
-    raw_results = await runner.run_job(job_id=job_id, cases=cases)
+
+    # Use distributed execution for parallel fuzz case running across Celery/Redis workers
+    # Fall back to sequential mode if Celery/Redis not available
+    try:
+        raw_results = await runner.run_job_distributed(job_id=job_id, cases=cases, celery_mode=True)
+    except Exception as e:
+        # Fallback to sequential execution if distributed system unavailable
+        import logging
+        logging.getLogger(__name__).warning(f"Distributed execution failed, falling back sequential: {e}")
+        raw_results = await runner.run_job_sequential(job_id=job_id, cases=cases)
 
     with db.get_connection() as conn:
         job_row = conn.execute("SELECT * FROM fuzz_jobs WHERE id = ?", (job_id,)).fetchone()
