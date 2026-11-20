@@ -1,6 +1,6 @@
 {
   "name": "api-fuzzer-frontend",
-  "version": "1.0.0",
+  "version": "1.6.0",
   "description": "AI-powered adversarial API fuzzer web interface",
   "type": "module",
   "author": {
