@@ -134,3 +134,48 @@ def export_job_report(job_id: str, format: str = Query("json", pattern="^(json|m
 
     db.record_audit(user.user_id, "job.export", f"job:{job_id}", {"format": format})
     return Response(content=content, media_type=m_type, headers={"Content-Disposition": f"attachment; filename=fuzz-report-{job_id[:8]}.{ext}"})
+
+
+@router.get("/{job_id}/progress")
+def get_job_progress(job_id: str, user: TokenUser = Depends(require_role("viewer"))) -> Dict[str, Any]:
+    """Get real-time progress for a fuzz job.
+    
+    Returns current progress including completed cases, total cases,
+    and percentage complete. The frontend can use Server-Sent Events
+    (SSE) to subscribe to real-time progress updates.
+    """
+    from fastapi import HTTPException
+    db = get_db()
+    with db.get_connection() as conn:
+        # Get total cases from job
+        job_row = conn.execute("SELECT * FROM fuzz_jobs WHERE id = ?", (job_id,)).fetchone()
+        if not job_row:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found")
+        
+        total_cases = job_row["total_cases"]
+        
+        # Get latest progress event from the progress_events table
+        progress_row = conn.execute(
+            """SELECT completed_cases, severity, created_at 
+               FROM progress_events 
+               WHERE job_id = ? 
+               ORDER BY created_at DESC 
+               LIMIT 1""",
+            (job_id,)
+        ).fetchone()
+        
+        completed_cases = progress_row["completed_cases"] if progress_row else 0
+        severity = progress_row["severity"] if progress_row else None
+        
+        percentage = round((completed_cases / total_cases * 100) if total_cases > 0 else 0, 2)
+        
+        return {
+            "job_id": job_id,
+            "total_cases": total_cases,
+            "completed_cases": completed_cases,
+            "percentage": percentage,
+            "status": job_row["status"],
+            "last_update": progress_row["created_at"] if progress_row else None,
+            "severity": severity,
+        }
+

@@ -107,6 +107,19 @@ class Database:
                     details TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS progress_events (
+                    id TEXT PRIMARY KEY,
+                    job_id TEXT NOT NULL,
+                    completed_cases INTEGER NOT NULL DEFAULT 0,
+                    severity TEXT NOT NULL DEFAULT 'unknown',
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY(job_id) REFERENCES fuzz_jobs(id) ON DELETE CASCADE
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_progress_job ON progress_events(job_id);
+
+                CREATE INDEX IF NOT EXISTS idx_progress_timestamp ON progress_events(created_at);
+
                 CREATE INDEX IF NOT EXISTS idx_jobs_spec ON fuzz_jobs(spec_id);
                 CREATE INDEX IF NOT EXISTS idx_cases_job ON test_cases(job_id);
                 CREATE INDEX IF NOT EXISTS idx_results_job ON test_results(job_id);

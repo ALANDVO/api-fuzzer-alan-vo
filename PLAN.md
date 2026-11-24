@@ -27,11 +27,13 @@ Tests: `backend/tests/test_auth.py`, `backend/tests/test_spec_parser.py`, `backe
 
 ### distributed-fuzzing-workers — Distributed Asynchronous Fuzz Worker Queue
 
-Status: planned
+Status: in_progress
 
 Acceptance:
 - Support distributed parallel execution of 1000+ fuzz cases across Celery/Redis worker nodes
 - Real-time Server-Sent Events (SSE) progress streaming to dashboard
+
+Implementation: `backend/app/services/fuzz_runner.py - incremental progress tracking in run_job_distributed`, `backend/app/core/database.py - progress_events table and indexes`, `backend/app/api/routes_jobs.py - GET /api/jobs/{job_id}/progress endpoint`
 
 ### automated-pr-remediation — Automated Pull Request Security Patch Generation
 

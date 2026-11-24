@@ -307,7 +307,7 @@ class FuzzRunner:
 
         # Persist results in transaction
         with db.get_connection() as conn:
-            # Update job status
+            # Update job status incrementally as results complete
             passed = sum(1 for r in final_results if r["severity"] == "pass")
             findings = total_cases - passed
             conn.execute(
@@ -352,6 +352,13 @@ class FuzzRunner:
                         utc_now(),
                     ),
                 )
+
+            # Record progress milestone for SSE streaming
+            conn.execute(
+                """INSERT INTO progress_events (job_id, completed_cases, severity, created_at)
+                   VALUES (?, ?, ?, ?)""",
+                (job_id, len(final_results), "completed", utc_now()),
+            )
             conn.commit()
 
         return final_results
