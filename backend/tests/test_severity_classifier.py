@@ -123,3 +123,21 @@ def test_classify_normal_pass():
         latency_ms=15.0
     )
     assert sev == "pass"
+
+
+def test_classify_idempotency_race_500_with_stack_trace_critical():
+    classifier = SeverityClassifier()
+    sev, reasoning, _ = classifier.classify(
+        test_name="Idempotency race crash",
+        dimension="idempotency_race",
+        method="POST",
+        url="http://127.0.0.1:8000/items",
+        headers={"X-Idempotency-Key": "dup-test-uuid-001"},
+        body={"payload": "idempotent_sample"},
+        expected_status=200,
+        actual_status=500,
+        response_body="Traceback (most recent call last):\n  File \"app.py\", line 1\nException in thread",
+        latency_ms=20.0
+    )
+    assert sev == "critical"
+    assert "stack trace" in reasoning.lower()

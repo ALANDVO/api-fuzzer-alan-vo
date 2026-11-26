@@ -52,11 +52,12 @@ class SeverityClassifier:
 
         # 1c. Unhandled 500 Server Error
         if actual_status >= 500:
-            # For idempotency_race, 500 is a robustness issue (moderate), not security (critical)
-            if dimension == "idempotency_race":
-                return "moderate", f"Idempotency race triggered server error {actual_status} - robustness concern.", repro_curl
+            # A leaked stack trace is a security leak regardless of dimension.
             if any(st in resp_lower for st in STACK_TRACE_INDICATORS):
                 return "critical", f"Unhandled server 500 exception with active stack trace leaked.", repro_curl
+            # For idempotency_race, a bare 500 is a robustness issue (moderate), not security (critical)
+            if dimension == "idempotency_race":
+                return "moderate", f"Idempotency race triggered server error {actual_status} - robustness concern.", repro_curl
             return "critical", f"Internal Server Error {actual_status} triggered on input payload.", repro_curl
 
         # 1d. Auth bypass
